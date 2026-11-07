@@ -114,7 +114,6 @@ internal class AndroidARView(
     private val orientationTurns = mutableMapOf<String, ValueAnimator>()
     private val outOfViewSince = mutableMapOf<String, Long>()
     private val lastRoamAt = mutableMapOf<String, Long>()
-    private var lastBearDiagnosticAt = 0L
     // Cloud anchor handler
     private lateinit var cloudAnchorHandler: CloudAnchorHandler
 
@@ -899,17 +898,6 @@ internal class AndroidARView(
         }
 
         updateRoamingCharacters()
-        val now = SystemClock.elapsedRealtime()
-        if (now - lastBearDiagnosticAt > 1000L) {
-            lastBearDiagnosticAt = now
-            arSceneView.scene.findByName("ukumari")?.let { bear ->
-                val camera = arSceneView.scene.camera
-                val local = camera.worldToLocalPoint(bear.worldPosition)
-                val screen = camera.worldToScreenPoint(bear.worldPosition)
-                Log.i(TAG, "UKUMARI_DIAG local=$local screen=$screen scale=${bear.localScale} " +
-                    "view=${arSceneView.width}x${arSceneView.height} animation=${activeAnimators.containsKey(bear.name)}")
-            }
-        }
 
     }
 
@@ -1334,9 +1322,6 @@ internal class AndroidARView(
                 }
                 val serializedPlaneAndPointHitResults: ArrayList<HashMap<String, Any>> =
                     ArrayList(placementHits.map { serializeHitResult(it) })
-                if (serializedPlaneAndPointHitResults.isEmpty()) {
-                    approximatePlacementHit(frame)?.let { serializedPlaneAndPointHitResults.add(it) }
-                }
                 sessionManagerChannel.invokeMethod(
                     "onPlaneOrPointTap",
                     serializedPlaneAndPointHitResults
@@ -1350,28 +1335,6 @@ internal class AndroidARView(
         return false
     }
 
-    private fun approximatePlacementHit(frame: Frame?): HashMap<String, Any>? {
-        if (frame?.camera?.trackingState != TrackingState.TRACKING) return null
-        val cameraPose = frame.camera.pose
-        var forward = cameraPose.getTransformedAxis(2, -1f)
-        var horizontal = kotlin.math.sqrt(forward[0] * forward[0] + forward[2] * forward[2])
-        if (horizontal < 0.1f) {
-            forward = cameraPose.getTransformedAxis(1, 1f)
-            horizontal = kotlin.math.sqrt(forward[0] * forward[0] + forward[2] * forward[2])
-        }
-        if (horizontal < 0.1f) return null
-        val camera = cameraPose.translation
-        val pose = Pose.makeTranslation(floatArrayOf(
-            camera[0] + forward[0] / horizontal * 1.6f,
-            camera[1] - 0.75f,
-            camera[2] + forward[2] / horizontal * 1.6f,
-        ))
-        return hashMapOf(
-            "type" to 3,
-            "distance" to 1.6,
-            "worldTransform" to serializePose(pose),
-        )
-    }
 
     private fun addPlaneAnchor(transform: ArrayList<Double>, name: String): Boolean {
         return try {
