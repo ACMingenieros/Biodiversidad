@@ -981,15 +981,15 @@ internal class AndroidARView(
                     if (arSceneView.scene.findByName(name) != null) {
                         turnCharacterTowardCamera(name, node)
                         activeAnimators[name]?.cancel()
-                        playAnimationContaining(name, listOf("wave", "talk"), loop = false)
+                        playAnimationContaining(name, greetTerms, loop = false)
                         outOfViewSince.remove(name)
                     }
                 }
             })
         }
         roamingMovements[name] = movement
-        if (distance < 1.2f || !playAnimationContaining(name, listOf("running", "run"), loop = true)) {
-            playAnimationContaining(name, listOf("walking", "walk"), loop = true)
+        if (distance < 1.2f || !playAnimationContaining(name, runTerms, loop = true)) {
+            playAnimationContaining(name, walkTerms, loop = true)
         }
         movement.start()
         return true
@@ -1026,6 +1026,12 @@ internal class AndroidARView(
     private fun findModelRenderable(name: String): RenderableInstance? =
         arSceneView.scene.findByName(name)?.renderableInstance
 
+    // Nombres de clips en inglés (tigrillo: Walk/Run/Wave/Talk) y en español
+    // (Ukumari: 08_Caminar/09_Correr/02_Saludo/03_Hablar).
+    private val walkTerms = listOf("walking", "walk", "caminar", "camina")
+    private val runTerms = listOf("running", "run", "correr", "corre")
+    private val greetTerms = listOf("wave", "talk", "saludo", "hablar")
+
     private fun playAnimationContaining(nodeName: String, terms: List<String>, loop: Boolean): Boolean {
         val renderable = findModelRenderable(nodeName) ?: return false
         val keywords = terms.map { it.lowercase() }
@@ -1038,8 +1044,7 @@ internal class AndroidARView(
 
     private fun playCharacterAnimation(nodeName: String, animationName: String, loop: Boolean): Boolean {
         if (roamingMovements.containsKey(nodeName) &&
-            !animationName.contains("run", ignoreCase = true) &&
-            !animationName.contains("walk", ignoreCase = true)) return false
+            (runTerms + walkTerms).none { animationName.contains(it, ignoreCase = true) }) return false
         val renderable = findModelRenderable(nodeName) ?: return false
         val clip = (0 until renderable.animationCount)
             .map { renderable.getAnimation(it) }
