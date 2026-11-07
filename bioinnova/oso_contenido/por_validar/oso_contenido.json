@@ -1,0 +1,503 @@
+{
+  "version": 1,
+  "prefijo_qr": "BIOINNOVA:",
+  "uso": "La app lee el QR, quita el prefijo y busca el id en 'puntos'. Todo offline.",
+  "puntos": [
+    {
+      "id": "ANI-004",
+      "qr_payload": "BIOINNOVA:ANI-004",
+      "nombre": "Gallito de las Rocas Peruano",
+      "nombre_cientifico": "Rupicola peruvianus",
+      "grupo": "ave",
+      "ubicacion_sugerida": "Sendero / quebrada",
+      "fuente": "por_validar",
+      "nota_validacion": "ERROR EN EL PDF: la ficha del gallito copia el texto de la tangara manchada ('plumaje verde, ala y cola azul'), y en la foto es naranja. Este texto usa conocimiento general; validar con el biólogo.",
+      "saludos": [
+        "¡Wow! Prepárate, porque aquí vive el ave nacional del Perú.",
+        "¡Hola! ¿Has visto alguna vez un ave color fuego?"
+      ],
+      "mensajes": [
+        {
+          "orden": 1,
+          "tipo": "descripcion",
+          "texto": "Es el gallito de las rocas peruano, Rupicola peruvianus, nuestra ave nacional.",
+          "animacion": "explicar",
+          "duracion_s": 5.4
+        },
+        {
+          "orden": 2,
+          "tipo": "descripcion",
+          "texto": "El macho es de un naranja rojizo intenso, con una cresta que le cubre el pico y alas negras con gris. La hembra es de tonos más oscuros, marrón anaranjado.",
+          "animacion": "explicar",
+          "duracion_s": 12.6
+        },
+        {
+          "orden": 3,
+          "tipo": "dato_curioso",
+          "texto": "Los machos se reúnen para bailar, saltar y cantar, y así conquistar a las hembras. ¡Son verdaderos concursos de baile!",
+          "animacion": "sorprendido",
+          "duracion_s": 8.6
+        },
+        {
+          "orden": 4,
+          "tipo": "descripcion",
+          "texto": "Come sobre todo frutos, y hace sus nidos de barro pegados a paredes de roca, cerca de quebradas.",
+          "animacion": "explicar",
+          "duracion_s": 7.8
+        },
+        {
+          "orden": 5,
+          "tipo": "despedida",
+          "texto": "Si escuchas un graznido fuerte cerca del agua, ¡puede ser él! Sigamos.",
+          "animacion": "despedirse",
+          "duracion_s": 5.4
+        }
+      ],
+      "pregunta": {
+        "texto": "¿Qué hacen los machos del gallito de las rocas para conquistar a las hembras?",
+        "opciones": [
+          "Bailan y cantan",
+          "Construyen nidos de oro",
+          "Nadan en el río"
+        ],
+        "correcta": 0,
+        "animacion_acierto": "celebrar",
+        "animacion_fallo": "pensar"
+      }
+    },
+    {
+      "id": "ANI-007",
+      "qr_payload": "BIOINNOVA:ANI-007",
+      "nombre": "Mono Tocón",
+      "nombre_cientifico": "Plecturocebus sp. (validar especie)",
+      "grupo": "mamifero",
+      "ubicacion_sugerida": "Centro de rescate",
+      "fuente": "por_validar",
+      "nota_validacion": "El PDF solo dice 'Mono Tocón (descripción)'. Confirmar especie: si es Plecturocebus oenanthe (mono tocón de San Martín) se mantiene el mensaje de conservación; si no, quitar esa línea.",
+      "saludos": [
+        "¡Hola! Te presento a unos monitos muy cariñosos.",
+        "¡Escucha! Quizá oigas cantar al mono tocón."
+      ],
+      "mensajes": [
+        {
+          "orden": 1,
+          "tipo": "descripcion",
+          "texto": "Este es el mono tocón, un mono pequeño que vive en grupos familiares.",
+          "animacion": "explicar",
+          "duracion_s": 5.8
+        },
+        {
+          "orden": 2,
+          "tipo": "dato_curioso",
+          "texto": "Las parejas suelen estar juntas toda la vida, y por las mañanas cantan a dúo para avisar que ese territorio es suyo.",
+          "animacion": "sorprendido",
+          "duracion_s": 9.4
+        },
+        {
+          "orden": 3,
+          "tipo": "descripcion",
+          "texto": "Se alimenta sobre todo de frutos, hojas e insectos.",
+          "animacion": "explicar",
+          "duracion_s": 4.2
+        },
+        {
+          "orden": 4,
+          "tipo": "conservacion",
+          "texto": "Aquí en San Martín vive el mono tocón de San Martín, que solo existe en esta región y está en peligro crítico. Cuidar el bosque es cuidarlo a él.",
+          "animacion": "serio_amable",
+          "duracion_s": 12.2
+        },
+        {
+          "orden": 5,
+          "tipo": "despedida",
+          "texto": "¡Vamos a conocer a otro mono muy inteligente!",
+          "animacion": "despedirse",
+          "duracion_s": 3.8
+        }
+      ],
+      "pregunta": {
+        "texto": "¿Para qué cantan a dúo los monos tocón?",
+        "opciones": [
+          "Para marcar su territorio",
+          "Para llamar a la lluvia",
+          "Porque tienen hambre"
+        ],
+        "correcta": 0,
+        "animacion_acierto": "celebrar",
+        "animacion_fallo": "pensar"
+      }
+    },
+    {
+      "id": "ANI-008",
+      "qr_payload": "BIOINNOVA:ANI-008",
+      "nombre": "Mono Machín Negro",
+      "nombre_cientifico": "Sapajus macrocephalus (validar)",
+      "grupo": "mamifero",
+      "ubicacion_sugerida": "Centro de rescate",
+      "fuente": "por_validar",
+      "nota_validacion": "El PDF solo dice 'Mono Machín Negro (características)'. Texto de conocimiento general.",
+      "saludos": [
+        "¡Cuidado con tus cosas! Aquí vive un mono muy listo.",
+        "¡Hola! ¿Sabías que hay monos que piensan como detectives?"
+      ],
+      "mensajes": [
+        {
+          "orden": 1,
+          "tipo": "descripcion",
+          "texto": "Este es el mono machín negro, un mono capuchino de la Amazonía.",
+          "animacion": "explicar",
+          "duracion_s": 5.4
+        },
+        {
+          "orden": 2,
+          "tipo": "dato_curioso",
+          "texto": "Es de los monos más inteligentes de América: explora, aprende rápido y busca la forma de abrir frutos duros.",
+          "animacion": "sorprendido",
+          "duracion_s": 8.2
+        },
+        {
+          "orden": 3,
+          "tipo": "descripcion",
+          "texto": "Come de todo: frutas, semillas, insectos y a veces pequeños animales. Vive en grupos.",
+          "animacion": "explicar",
+          "duracion_s": 6.2
+        },
+        {
+          "orden": 4,
+          "tipo": "conservacion",
+          "texto": "Muchos llegan a centros de rescate porque los tenían como mascotas. Un mono no es una mascota: su casa es el bosque.",
+          "animacion": "serio_amable",
+          "duracion_s": 9.4
+        },
+        {
+          "orden": 5,
+          "tipo": "despedida",
+          "texto": "¡Sigamos! Ahora vamos con alguien que no tiene ninguna prisa.",
+          "animacion": "despedirse",
+          "duracion_s": 4.6
+        }
+      ],
+      "pregunta": {
+        "texto": "¿Por qué muchos monos machín llegan a centros de rescate?",
+        "opciones": [
+          "Porque los tenían como mascotas",
+          "Porque se perdieron en la ciudad",
+          "Porque buscan comida"
+        ],
+        "correcta": 0,
+        "animacion_acierto": "celebrar",
+        "animacion_fallo": "pensar"
+      }
+    },
+    {
+      "id": "ANI-009",
+      "qr_payload": "BIOINNOVA:ANI-009",
+      "nombre": "Motelo",
+      "nombre_cientifico": "Chelonoidis denticulatus",
+      "grupo": "reptil",
+      "ubicacion_sugerida": "Centro de rescate",
+      "fuente": "por_validar",
+      "nota_validacion": "El PDF solo dice 'Motelos (características)' y muestra su foto. Texto de conocimiento general.",
+      "saludos": [
+        "Despacito, despacito... ¡aquí está el motelo!",
+        "¡Hola! Te presento a un sabio con caparazón."
+      ],
+      "mensajes": [
+        {
+          "orden": 1,
+          "tipo": "descripcion",
+          "texto": "Este es el motelo, o tortuga de patas amarillas. Es una tortuga terrestre de la Amazonía.",
+          "animacion": "explicar",
+          "duracion_s": 7.0
+        },
+        {
+          "orden": 2,
+          "tipo": "dato_curioso",
+          "texto": "Es una de las tortugas terrestres más grandes de Sudamérica, ¡y puede vivir muchísimos años!",
+          "animacion": "sorprendido",
+          "duracion_s": 6.6
+        },
+        {
+          "orden": 3,
+          "tipo": "descripcion",
+          "texto": "Come frutos caídos, hojas y hongos. Al comer frutos y moverse, también siembra semillas.",
+          "animacion": "explicar",
+          "duracion_s": 6.2
+        },
+        {
+          "orden": 4,
+          "tipo": "conservacion",
+          "texto": "Está en estado vulnerable porque lo cazan y lo venden. Si ves uno en el mercado, no lo compres.",
+          "animacion": "serio_amable",
+          "duracion_s": 8.2
+        },
+        {
+          "orden": 5,
+          "tipo": "despedida",
+          "texto": "¡Sin prisa pero sin pausa! Sigamos.",
+          "animacion": "despedirse",
+          "duracion_s": 3.0
+        }
+      ],
+      "pregunta": {
+        "texto": "¿Qué come el motelo?",
+        "opciones": [
+          "Frutos caídos y hojas",
+          "Peces",
+          "Solo insectos"
+        ],
+        "correcta": 0,
+        "animacion_acierto": "celebrar",
+        "animacion_fallo": "pensar"
+      }
+    },
+    {
+      "id": "ANI-010",
+      "qr_payload": "BIOINNOVA:ANI-010",
+      "nombre": "Pucacunga",
+      "nombre_cientifico": "Penelope jacquacu",
+      "grupo": "ave",
+      "ubicacion_sugerida": "Centro de rescate",
+      "fuente": "por_validar",
+      "nota_validacion": "El PDF la nombra en el recorrido y la lista de aves ('Pava Amazónica o Pucacunga', Penelope jacquacu). El resto es conocimiento general.",
+      "saludos": [
+        "¡Mira qué cuello tan llamativo tiene mi amiga!",
+        "¡Hola! Aquí vive la pava de la Amazonía."
+      ],
+      "mensajes": [
+        {
+          "orden": 1,
+          "tipo": "descripcion",
+          "texto": "Esta es la pucacunga o pava amazónica, Penelope jacquacu.",
+          "animacion": "explicar",
+          "duracion_s": 4.2
+        },
+        {
+          "orden": 2,
+          "tipo": "dato_curioso",
+          "texto": "Su nombre viene del quechua: 'puka' es rojo y 'kunka' es cuello. Mira la piel roja que tiene en la garganta.",
+          "animacion": "sorprendido",
+          "duracion_s": 9.0
+        },
+        {
+          "orden": 3,
+          "tipo": "descripcion",
+          "texto": "Come frutos y semillas, y al hacerlo ayuda a sembrar el bosque.",
+          "animacion": "explicar",
+          "duracion_s": 5.4
+        },
+        {
+          "orden": 4,
+          "tipo": "conservacion",
+          "texto": "Es muy cazada por su carne. Por eso centros como este la rescatan y protegen.",
+          "animacion": "serio_amable",
+          "duracion_s": 6.6
+        },
+        {
+          "orden": 5,
+          "tipo": "despedida",
+          "texto": "¡Vamos! El siguiente vecino sale de noche.",
+          "animacion": "despedirse",
+          "duracion_s": 3.4
+        }
+      ],
+      "pregunta": {
+        "texto": "¿Qué significa 'pucacunga' en quechua?",
+        "opciones": [
+          "Cuello rojo",
+          "Ave grande",
+          "Pluma negra"
+        ],
+        "correcta": 0,
+        "animacion_acierto": "celebrar",
+        "animacion_fallo": "pensar"
+      }
+    },
+    {
+      "id": "ANI-011",
+      "qr_payload": "BIOINNOVA:ANI-011",
+      "nombre": "Picuro Maman",
+      "nombre_cientifico": "Cuniculus paca",
+      "grupo": "mamifero",
+      "ubicacion_sugerida": "Centro de rescate",
+      "fuente": "por_validar",
+      "nota_validacion": "El PDF solo dice 'Picuro Maman (características)'. Texto de conocimiento general.",
+      "saludos": [
+        "¡Hola! Te presento a un roedor con pijama de puntos.",
+        "¡Shhh! El picuro es tímido, hablemos bajito."
+      ],
+      "mensajes": [
+        {
+          "orden": 1,
+          "tipo": "descripcion",
+          "texto": "Este es el picuro, Cuniculus paca, uno de los roedores más grandes de la Amazonía.",
+          "animacion": "explicar",
+          "duracion_s": 6.6
+        },
+        {
+          "orden": 2,
+          "tipo": "dato_curioso",
+          "texto": "Tiene filas de manchas blancas a los costados del cuerpo, como si llevara un pijama de puntos.",
+          "animacion": "sorprendido",
+          "duracion_s": 7.4
+        },
+        {
+          "orden": 3,
+          "tipo": "descripcion",
+          "texto": "Es nocturno: de día descansa en su madriguera y de noche sale a buscar frutos y semillas.",
+          "animacion": "explicar",
+          "duracion_s": 7.4
+        },
+        {
+          "orden": 4,
+          "tipo": "dato_curioso",
+          "texto": "Es muy buen nadador. Si siente peligro, ¡se lanza al agua para escapar!",
+          "animacion": "sorprendido",
+          "duracion_s": 5.8
+        },
+        {
+          "orden": 5,
+          "tipo": "despedida",
+          "texto": "¡Sigamos! Ahora conocerás a un felino del bosque.",
+          "animacion": "despedirse",
+          "duracion_s": 3.8
+        }
+      ],
+      "pregunta": {
+        "texto": "¿Qué hace el picuro cuando siente peligro?",
+        "opciones": [
+          "Se lanza al agua",
+          "Se sube a un árbol",
+          "Se hace el muerto"
+        ],
+        "correcta": 0,
+        "animacion_acierto": "celebrar",
+        "animacion_fallo": "pensar"
+      }
+    },
+    {
+      "id": "ANI-012",
+      "qr_payload": "BIOINNOVA:ANI-012",
+      "nombre": "Tigrillo",
+      "nombre_cientifico": "Leopardus sp. (validar especie)",
+      "grupo": "mamifero",
+      "ubicacion_sugerida": "Centro de rescate",
+      "fuente": "por_validar",
+      "nota_validacion": "El PDF solo dice 'Tigrillo (características)'. En Perú 'tigrillo' puede ser ocelote (L. pardalis) o margay (L. wiedii); confirmar cuál tienen.",
+      "saludos": [
+        "¡Hola! Aquí vive un felino silencioso y elegante.",
+        "¡Mira esas manchas! Te presento al tigrillo."
+      ],
+      "mensajes": [
+        {
+          "orden": 1,
+          "tipo": "descripcion",
+          "texto": "Este es el tigrillo, un felino silvestre de la Amazonía.",
+          "animacion": "explicar",
+          "duracion_s": 4.6
+        },
+        {
+          "orden": 2,
+          "tipo": "dato_curioso",
+          "texto": "Las manchas de su pelaje son únicas: no hay dos tigrillos con el mismo dibujo, ¡como nuestras huellas digitales!",
+          "animacion": "sorprendido",
+          "duracion_s": 8.2
+        },
+        {
+          "orden": 3,
+          "tipo": "descripcion",
+          "texto": "Es solitario y caza sobre todo de noche: roedores, aves y otros animales pequeños.",
+          "animacion": "explicar",
+          "duracion_s": 6.2
+        },
+        {
+          "orden": 4,
+          "tipo": "conservacion",
+          "texto": "Por años lo cazaron por su piel y hoy aún lo capturan para venderlo como mascota. Un felino silvestre nunca debe vivir en una casa.",
+          "animacion": "serio_amable",
+          "duracion_s": 10.6
+        },
+        {
+          "orden": 5,
+          "tipo": "despedida",
+          "texto": "¡Vamos al último recinto, lleno de colores!",
+          "animacion": "despedirse",
+          "duracion_s": 3.4
+        }
+      ],
+      "pregunta": {
+        "texto": "¿Qué tienen de especial las manchas del tigrillo?",
+        "opciones": [
+          "Cada tigrillo tiene un dibujo único",
+          "Cambian de color",
+          "Brillan de noche"
+        ],
+        "correcta": 0,
+        "animacion_acierto": "celebrar",
+        "animacion_fallo": "pensar"
+      }
+    },
+    {
+      "id": "ANI-013",
+      "qr_payload": "BIOINNOVA:ANI-013",
+      "nombre": "Guacamayos y Loros",
+      "nombre_cientifico": "Familia Psittacidae (validar especies)",
+      "grupo": "ave",
+      "ubicacion_sugerida": "Centro de rescate (último recinto)",
+      "fuente": "por_validar",
+      "nota_validacion": "El PDF solo dice 'Guacamayo y los Loros (características)'. Texto general; poner especies cuando el centro las confirme.",
+      "saludos": [
+        "¡Qué bulla! Llegamos con los guacamayos y loros.",
+        "¡Hola! ¿Escuchas esos gritos? ¡Son mis amigos de colores!"
+      ],
+      "mensajes": [
+        {
+          "orden": 1,
+          "tipo": "descripcion",
+          "texto": "Aquí están los guacamayos y los loros, aves muy inteligentes y sociables.",
+          "animacion": "explicar",
+          "duracion_s": 5.4
+        },
+        {
+          "orden": 2,
+          "tipo": "dato_curioso",
+          "texto": "Su pico curvo y fuerte funciona como un cascanueces: abre semillas muy duras.",
+          "animacion": "sorprendido",
+          "duracion_s": 5.8
+        },
+        {
+          "orden": 3,
+          "tipo": "dato_curioso",
+          "texto": "En la Amazonía bajan a comer arcilla en lugares llamados collpas, que les ayuda con su digestión.",
+          "animacion": "sorprendido",
+          "duracion_s": 7.4
+        },
+        {
+          "orden": 4,
+          "tipo": "conservacion",
+          "texto": "Muchos llegan aquí rescatados del tráfico de mascotas. Su lugar es volar libres en el bosque.",
+          "animacion": "serio_amable",
+          "duracion_s": 7.0
+        },
+        {
+          "orden": 5,
+          "tipo": "despedida",
+          "texto": "¡Terminamos el centro de rescate! Ahora vamos al columpio natural y al árbol de los deseos.",
+          "animacion": "despedirse",
+          "duracion_s": 7.0
+        }
+      ],
+      "pregunta": {
+        "texto": "¿Para qué usan los guacamayos su pico curvo y fuerte?",
+        "opciones": [
+          "Para abrir semillas duras",
+          "Para cavar hoyos",
+          "Para pescar"
+        ],
+        "correcta": 0,
+        "animacion_acierto": "celebrar",
+        "animacion_fallo": "pensar"
+      }
+    }
+  ]
+}

@@ -1,0 +1,490 @@
+{
+  "version": 1,
+  "prefijo_qr": "BIOINNOVA:",
+  "uso": "La app lee el QR, quita el prefijo y busca el id en 'puntos'. Todo offline.",
+  "puntos": [
+    {
+      "id": "ANI-000",
+      "qr_payload": "BIOINNOVA:ANI-000",
+      "nombre": "Bienvenida a la Biodiversidad",
+      "nombre_cientifico": "Tremarctos ornatus (el guía)",
+      "grupo": "bienvenida",
+      "ubicacion_sugerida": "Caseta de información / entrada",
+      "fuente": "manual",
+      "nota_validacion": "Datos del centro: Word + speech del PDF. El dato del oso (único oso de Sudamérica) es conocimiento general.",
+      "saludos": [
+        "¡Hola, explorador! Soy el oso de anteojos y hoy seré tu guía.",
+        "¡Qué bueno verte por aquí! Soy el oso de anteojos, ¿me acompañas?",
+        "¡Bienvenido, bienvenida! El oso de anteojos te saluda desde el bosque."
+      ],
+      "mensajes": [
+        {
+          "orden": 1,
+          "tipo": "descripcion",
+          "texto": "Estás en el Centro Académico de Investigación y Ecoturismo de la Universidad Nacional de San Martín. Lo conocen como la Biodiversidad, y existe desde 1993.",
+          "animacion": "explicar",
+          "duracion_s": 10.6
+        },
+        {
+          "orden": 2,
+          "tipo": "descripcion",
+          "texto": "Son unas 136 hectáreas de bosque dentro del Área de Conservación Regional Cordillera Escalera, en el kilómetro 17.5 de la carretera Tarapoto – Yurimaguas, a 960 metros sobre el nivel del mar.",
+          "animacion": "explicar",
+          "duracion_s": 13.4
+        },
+        {
+          "orden": 3,
+          "tipo": "dato_curioso",
+          "texto": "¿Sabías que aquí hay bosques de arena blanca? Esa arena se formó por sedimentación hace unos 2.58 millones de años, en el Pleistoceno.",
+          "animacion": "sorprendido",
+          "duracion_s": 9.8
+        },
+        {
+          "orden": 4,
+          "tipo": "dato_curioso",
+          "texto": "Y un dato sobre mí: soy el único oso que vive en Sudamérica. Las manchas claras alrededor de mis ojos parecen anteojos, por eso mi nombre.",
+          "animacion": "sorprendido",
+          "duracion_s": 11.0
+        },
+        {
+          "orden": 5,
+          "tipo": "conservacion",
+          "texto": "Este lugar también es un centro de rescate: los animales que verás fueron rescatados, se evalúa su salud y, cuando están listos, vuelven a su hábitat.",
+          "animacion": "serio_amable",
+          "duracion_s": 11.0
+        },
+        {
+          "orden": 6,
+          "tipo": "despedida",
+          "texto": "Busca los códigos QR en el camino. En cada uno te contaré la historia de un animal. ¡Vamos!",
+          "animacion": "despedirse",
+          "duracion_s": 7.8
+        }
+      ],
+      "pregunta": {
+        "texto": "¿Desde qué año existe la Biodiversidad de la UNSM?",
+        "opciones": [
+          "1993",
+          "2005",
+          "1980"
+        ],
+        "correcta": 0,
+        "animacion_acierto": "celebrar",
+        "animacion_fallo": "pensar"
+      }
+    },
+    {
+      "id": "ANI-001",
+      "qr_payload": "BIOINNOVA:ANI-001",
+      "nombre": "Tangara Manchada",
+      "nombre_cientifico": "Ixothraupis varia",
+      "grupo": "ave",
+      "ubicacion_sugerida": "Sendero / bosque de arena blanca",
+      "fuente": "manual",
+      "nota_validacion": "",
+      "saludos": [
+        "¡Shhh! Mira entre las ramas, quizá veas a la tangara manchada.",
+        "¡Hola de nuevo! Te presento a una pequeña joya verde del bosque."
+      ],
+      "mensajes": [
+        {
+          "orden": 1,
+          "tipo": "descripcion",
+          "texto": "Es la tangara manchada, Ixothraupis varia. Tiene el plumaje verde, y las alas y la cola de color azul.",
+          "animacion": "explicar",
+          "duracion_s": 8.2
+        },
+        {
+          "orden": 2,
+          "tipo": "descripcion",
+          "texto": "Vive en bosques húmedos y colinas, como los que rodean este lugar.",
+          "animacion": "explicar",
+          "duracion_s": 5.4
+        },
+        {
+          "orden": 3,
+          "tipo": "dato_curioso",
+          "texto": "Su comida favorita son los frutos que crecen en los bosques de arena blanca, y además come insectos para obtener proteínas.",
+          "animacion": "sorprendido",
+          "duracion_s": 9.0
+        },
+        {
+          "orden": 4,
+          "tipo": "despedida",
+          "texto": "Si escuchas un aleteo rápido entre las hojas, ¡puede ser ella! Sigamos.",
+          "animacion": "despedirse",
+          "duracion_s": 5.4
+        }
+      ],
+      "pregunta": {
+        "texto": "¿Qué come la tangara manchada para obtener proteínas?",
+        "opciones": [
+          "Insectos",
+          "Hojas",
+          "Néctar"
+        ],
+        "correcta": 0,
+        "animacion_acierto": "celebrar",
+        "animacion_fallo": "pensar"
+      }
+    },
+    {
+      "id": "ANI-002",
+      "qr_payload": "BIOINNOVA:ANI-002",
+      "nombre": "Fruterito Plomizo",
+      "nombre_cientifico": "Euphonia plumbea",
+      "grupo": "ave",
+      "ubicacion_sugerida": "Sendero",
+      "fuente": "manual",
+      "nota_validacion": "",
+      "saludos": [
+        "¡Atención! Aquí vive una de las estrellas de Cordillera Escalera.",
+        "¡Hola! ¿Listo para conocer a un ave muy ingeniosa?"
+      ],
+      "mensajes": [
+        {
+          "orden": 1,
+          "tipo": "descripcion",
+          "texto": "Este es el fruterito plomizo, Euphonia plumbea. Es considerado una especie emblemática de Cordillera Escalera.",
+          "animacion": "explicar",
+          "duracion_s": 6.6
+        },
+        {
+          "orden": 2,
+          "tipo": "descripcion",
+          "texto": "Se alimenta sobre todo de frutos como renacos, atadijos y miconias, que crecen en distintos tipos de bosque.",
+          "animacion": "explicar",
+          "duracion_s": 7.8
+        },
+        {
+          "orden": 3,
+          "tipo": "dato_curioso",
+          "texto": "¡Y mira qué ingenioso! También come arañas, y usa sus telarañas para construir su nido.",
+          "animacion": "sorprendido",
+          "duracion_s": 6.6
+        },
+        {
+          "orden": 4,
+          "tipo": "despedida",
+          "texto": "Un ave pequeñita que aprovecha todo lo que el bosque le da. ¡Sigamos caminando!",
+          "animacion": "despedirse",
+          "duracion_s": 6.2
+        }
+      ],
+      "pregunta": {
+        "texto": "¿Qué usa el fruterito plomizo para construir su nido?",
+        "opciones": [
+          "Telarañas",
+          "Barro",
+          "Plumas de otras aves"
+        ],
+        "correcta": 0,
+        "animacion_acierto": "celebrar",
+        "animacion_fallo": "pensar"
+      }
+    },
+    {
+      "id": "ANI-003",
+      "qr_payload": "BIOINNOVA:ANI-003",
+      "nombre": "Arasarí Crespo",
+      "nombre_cientifico": "Pteroglossus beauharnaisii",
+      "grupo": "ave",
+      "ubicacion_sugerida": "Sendero / dosel",
+      "fuente": "manual",
+      "nota_validacion": "",
+      "saludos": [
+        "¡Mira hacia arriba! Aquí anda un tucán con peinado especial.",
+        "¡Hola! Te presento al tucán más elegante del bosque."
+      ],
+      "mensajes": [
+        {
+          "orden": 1,
+          "tipo": "descripcion",
+          "texto": "Es el arasarí crespo, Pteroglossus beauharnaisii, una especie de tucán de Sudamérica.",
+          "animacion": "explicar",
+          "duracion_s": 5.4
+        },
+        {
+          "orden": 2,
+          "tipo": "dato_curioso",
+          "texto": "Lo reconoces por las plumas de su cabeza: son rizadas y onduladas, ¡como si tuviera rulos!",
+          "animacion": "sorprendido",
+          "duracion_s": 7.0
+        },
+        {
+          "orden": 3,
+          "tipo": "descripcion",
+          "texto": "Es omnívoro: come frutas, semillas y huevos.",
+          "animacion": "explicar",
+          "duracion_s": 3.4
+        },
+        {
+          "orden": 4,
+          "tipo": "conservacion",
+          "texto": "Ayuda a mantener el equilibrio de la naturaleza. Si lo ves, es una buena señal: nos indica que el bosque donde vive está sano.",
+          "animacion": "serio_amable",
+          "duracion_s": 10.2
+        },
+        {
+          "orden": 5,
+          "tipo": "despedida",
+          "texto": "¡Ojalá lo veas volar! Vamos al siguiente punto.",
+          "animacion": "despedirse",
+          "duracion_s": 3.8
+        }
+      ],
+      "pregunta": {
+        "texto": "¿Qué nos indica la presencia del arasarí crespo?",
+        "opciones": [
+          "Que el bosque está sano",
+          "Que va a llover",
+          "Que es de noche"
+        ],
+        "correcta": 0,
+        "animacion_acierto": "celebrar",
+        "animacion_fallo": "pensar"
+      }
+    },
+    {
+      "id": "ANI-005",
+      "qr_payload": "BIOINNOVA:ANI-005",
+      "nombre": "Cóndor Amazónico",
+      "nombre_cientifico": "Sarcoramphus papa",
+      "grupo": "ave",
+      "ubicacion_sugerida": "Centro de rescate (1.er recinto)",
+      "fuente": "manual",
+      "nota_validacion": "Además del manual: 'limpiador del bosque' se deriva de que es carroñero.",
+      "saludos": [
+        "¡Empezamos el centro de rescate con un gigante del cielo!",
+        "¡Hola! Mira bien a mi amigo, el rey de los carroñeros."
+      ],
+      "mensajes": [
+        {
+          "orden": 1,
+          "tipo": "descripcion",
+          "texto": "Él es el cóndor amazónico, Sarcoramphus papa, también conocido como el cóndor de la selva.",
+          "animacion": "explicar",
+          "duracion_s": 6.6
+        },
+        {
+          "orden": 2,
+          "tipo": "descripcion",
+          "texto": "Es el ave carroñera más grande y dominante de los bosques tropicales de América. Vive en la selva alta, la selva baja y el bosque seco.",
+          "animacion": "explicar",
+          "duracion_s": 11.0
+        },
+        {
+          "orden": 3,
+          "tipo": "dato_curioso",
+          "texto": "Mide entre 71 y 81.5 centímetros, pesa de 3 a 4.5 kilos, ¡y con las alas abiertas llega a 2 metros!",
+          "animacion": "sorprendido",
+          "duracion_s": 9.0
+        },
+        {
+          "orden": 4,
+          "tipo": "conservacion",
+          "texto": "Al comer animales muertos, limpia el bosque. Sin él, el bosque estaría mucho más sucio.",
+          "animacion": "serio_amable",
+          "duracion_s": 6.6
+        },
+        {
+          "orden": 5,
+          "tipo": "despedida",
+          "texto": "Recuerda: está aquí porque fue rescatado. Obsérvalo con respeto, sin hacer ruido. ¡Vamos con los añujes!",
+          "animacion": "despedirse",
+          "duracion_s": 7.0
+        }
+      ],
+      "pregunta": {
+        "texto": "¿Cuánto pueden medir las alas abiertas del cóndor amazónico?",
+        "opciones": [
+          "Hasta 2 metros",
+          "50 centímetros",
+          "5 metros"
+        ],
+        "correcta": 0,
+        "animacion_acierto": "celebrar",
+        "animacion_fallo": "pensar"
+      }
+    },
+    {
+      "id": "ANI-006",
+      "qr_payload": "BIOINNOVA:ANI-006",
+      "nombre": "Añuje",
+      "nombre_cientifico": "Dasyprocta punctata",
+      "grupo": "mamifero",
+      "ubicacion_sugerida": "Centro de rescate",
+      "fuente": "manual",
+      "nota_validacion": "",
+      "saludos": [
+        "¡Ahí está el obrero más trabajador del bosque!",
+        "¡Hola! Te presento a un corredor muy veloz."
+      ],
+      "mensajes": [
+        {
+          "orden": 1,
+          "tipo": "descripcion",
+          "texto": "Este es el añuje, Dasyprocta punctata. Vive en los bosques tropicales de la Amazonía y Centroamérica.",
+          "animacion": "explicar",
+          "duracion_s": 7.0
+        },
+        {
+          "orden": 2,
+          "tipo": "descripcion",
+          "texto": "Mide entre 42 y 62 centímetros y pesa entre 2 y 7 kilos.",
+          "animacion": "explicar",
+          "duracion_s": 5.8
+        },
+        {
+          "orden": 3,
+          "tipo": "dato_curioso",
+          "texto": "Le dicen el obrero del bosque, porque dispersa semillas: las lleva de un lugar a otro y así nacen nuevos árboles.",
+          "animacion": "sorprendido",
+          "duracion_s": 9.0
+        },
+        {
+          "orden": 4,
+          "tipo": "dato_curioso",
+          "texto": "Es muy ágil y veloz. Recorre su territorio solo o con su pareja.",
+          "animacion": "sorprendido",
+          "duracion_s": 5.8
+        },
+        {
+          "orden": 5,
+          "tipo": "despedida",
+          "texto": "¡Gracias, añuje, por plantar el bosque! Sigamos.",
+          "animacion": "despedirse",
+          "duracion_s": 3.4
+        }
+      ],
+      "pregunta": {
+        "texto": "¿Por qué al añuje le dicen 'obrero del bosque'?",
+        "opciones": [
+          "Porque dispersa semillas",
+          "Porque construye madrigueras grandes",
+          "Porque cuida a otros animales"
+        ],
+        "correcta": 0,
+        "animacion_acierto": "celebrar",
+        "animacion_fallo": "pensar"
+      }
+    },
+    {
+      "id": "ANI-014",
+      "qr_payload": "BIOINNOVA:ANI-014",
+      "nombre": "Ranas de la Biodiversidad",
+      "nombre_cientifico": "Orden Anura (10 especies registradas)",
+      "grupo": "anfibio",
+      "ubicacion_sugerida": "Sendero a la cascada / zona húmeda",
+      "fuente": "manual",
+      "nota_validacion": "Lista y dato de 'termómetro natural' del PDF (fuente: Lic. Henry Gonzales Pinedo). La advertencia de no tocarlas es conocimiento general (Dendrobatidae).",
+      "saludos": [
+        "¡Croac! Llegamos al reino de las ranas.",
+        "¡Hola! Mira con calma las hojas húmedas: aquí viven las ranas."
+      ],
+      "mensajes": [
+        {
+          "orden": 1,
+          "tipo": "descripcion",
+          "texto": "Este bosque es perfecto para las ranas: combina bosque nuboso y humedad constante durante todo el año. Aquí se han registrado 10 especies.",
+          "animacion": "explicar",
+          "duracion_s": 9.8
+        },
+        {
+          "orden": 2,
+          "tipo": "dato_curioso",
+          "texto": "Las ranas son como termómetros naturales del clima: respiran y toman agua a través de su piel, así que sienten de inmediato cualquier cambio de temperatura.",
+          "animacion": "sorprendido",
+          "duracion_s": 11.0
+        },
+        {
+          "orden": 3,
+          "tipo": "descripcion",
+          "texto": "Aquí viven, por ejemplo, la rana venenosa de tres rayas, la ranita listada, la rana arborícola de ojos rojos y el sapo de patas cortas del río Huallaga.",
+          "animacion": "explicar",
+          "duracion_s": 11.8
+        },
+        {
+          "orden": 4,
+          "tipo": "conservacion",
+          "texto": "Algunas son venenosas y su piel es muy delicada: míralas, pero nunca las toques.",
+          "animacion": "serio_amable",
+          "duracion_s": 6.2
+        },
+        {
+          "orden": 5,
+          "tipo": "despedida",
+          "texto": "¡Sigue hacia la cascada y fíjate bien dónde pisas!",
+          "animacion": "despedirse",
+          "duracion_s": 4.2
+        }
+      ],
+      "pregunta": {
+        "texto": "¿Por qué las ranas son 'termómetros naturales'?",
+        "opciones": [
+          "Porque respiran y beben por la piel",
+          "Porque cambian de color con el frío",
+          "Porque cantan cuando hace calor"
+        ],
+        "correcta": 0,
+        "animacion_acierto": "celebrar",
+        "animacion_fallo": "pensar"
+      }
+    },
+    {
+      "id": "ANI-015",
+      "qr_payload": "BIOINNOVA:ANI-015",
+      "nombre": "Aves de la noche",
+      "nombre_cientifico": "Strigidae y Nyctibiidae",
+      "grupo": "ave",
+      "ubicacion_sugerida": "Sendero (punto de observación)",
+      "fuente": "manual",
+      "nota_validacion": "Especies de la lista de aves del PDF (fuente: Lic. Henry Gonzales Pinedo). El camuflaje del nictibio es conocimiento general.",
+      "saludos": [
+        "¡Uuuh, uuuh! Este punto es de las aves que trabajan de noche.",
+        "¡Hola! Cuando todos duermen, ellas despiertan."
+      ],
+      "mensajes": [
+        {
+          "orden": 1,
+          "tipo": "descripcion",
+          "texto": "En la Biodiversidad viven aves nocturnas como la lechuza tropical, el búho café, el búho penachudo y la lechucita ferruginosa.",
+          "animacion": "explicar",
+          "duracion_s": 8.6
+        },
+        {
+          "orden": 2,
+          "tipo": "dato_curioso",
+          "texto": "También viven los nictibios. De día se quedan quietos sobre una rama y parecen un pedazo de tronco roto. ¡Son maestros del camuflaje!",
+          "animacion": "sorprendido",
+          "duracion_s": 9.8
+        },
+        {
+          "orden": 3,
+          "tipo": "descripcion",
+          "texto": "En total, la lista del centro registra 24 especies de aves, entre perdices, palomas, pavas, cuclillos, búhos y nictibios.",
+          "animacion": "explicar",
+          "duracion_s": 8.2
+        },
+        {
+          "orden": 4,
+          "tipo": "despedida",
+          "texto": "Si vuelves de noche, escucha bien: quizás te respondan. ¡Sigamos!",
+          "animacion": "despedirse",
+          "duracion_s": 4.6
+        }
+      ],
+      "pregunta": {
+        "texto": "¿Cómo se esconde el nictibio durante el día?",
+        "opciones": [
+          "Parece un tronco roto",
+          "Se mete bajo tierra",
+          "Vuela muy alto"
+        ],
+        "correcta": 0,
+        "animacion_acierto": "celebrar",
+        "animacion_fallo": "pensar"
+      }
+    }
+  ]
+}
