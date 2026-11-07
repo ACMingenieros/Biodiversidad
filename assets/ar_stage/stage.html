@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Ukumari AR Stage · Biodiversidad UNSM</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: transparent;
+      touch-action: none;
+    }
+    #stage-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      background: transparent;
+    }
+    #loading-pill {
+      position: fixed;
+      top: 38%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(14, 99, 47, 0.92);
+      color: #efece1;
+      border: 1.5px solid #efece1;
+      padding: 12px 22px;
+      border-radius: 999px;
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      backdrop-filter: blur(10px);
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+      z-index: 20;
+    }
+    #loading-pill.hidden {
+      opacity: 0;
+    }
+    #ar-hint-toast {
+      position: fixed;
+      top: 62px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(8, 61, 28, 0.78);
+      color: #efece1;
+      border: 1px solid rgba(239, 236, 225, 0.45);
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 11.5px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      backdrop-filter: blur(8px);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.45s ease;
+      white-space: nowrap;
+      z-index: 15;
+    }
+    #ar-hint-toast.visible {
+      opacity: 1;
+    }
+  </style>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.169.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.169.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <canvas id="stage-canvas"></canvas>
+  <div id="loading-pill">Cargando a Ukumari 3D...</div>
+  <div id="ar-hint-toast">📍 Toca el piso o pulsa '¡Ven aquí!' · Ukumari caminará hacia ti</div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+    const canvas = document.getElementById('stage-canvas');
+    const loadingPill = document.getElementById('loading-pill');
+    const arHintToast = document.getElementById('ar-hint-toast');
+
+    const scene = new THREE.Scene();
+
+    // =========================================================================
+    // 1. FRAMING AND FIXED VIRTUAL CAMERA ORIGIN
+    // =========================================================================
+    // Mathematical calibration so Ukumari's feet project at ~64.2% of screen height
+    // and head at ~22%, leaving the bottom card and top bar completely clear!
+    const CAMERA_HEIGHT = 1.12;          // Natural handheld phone height (~1.12m above floor)
+    const DEFAULT_ANCHOR_Z = -2.25;       // Natural distance (~2.25m in front of user)
+    const DEFAULT_LOOK_PITCH = -0.365;    // Calibrated downward gaze angle (~-20.9°)
+
+    const camera = new THREE.PerspectiveCamera(
+      38,
+      window.innerWidth / window.innerHeight,
+      0.05,
+      60
+    );
+    camera.position.set(0, CAMERA_HEIGHT, 0);
+    camera.rotation.order = 'YXZ';
+
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      alpha: true,
+      antialias: true,
+      powerPreference: 'high-performance',
+    });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight, false);
+    renderer.setClearColor(0x000000, 0);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.10;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    // Natural rainforest & real-world ambient lighting
+    const hemiLight = new THREE.HemisphereLight(0xf6fbed, 0x1e3a24, 1.92);
+    hemiLight.position.set(0, 5, 0);
+    scene.add(hemiLight);
+
+    const sunLight = new THREE.DirectionalLight(0xfff4dc, 2.75);
+    sunLight.position.set(1.6, 4.4, -1.6);
+    sunLight.castShadow = true;
+    sunLight.shadow.mapSize.width = 2048;
+    sunLight.shadow.mapSize.height = 2048;
+    sunLight.shadow.camera.near = 0.5;
+    sunLight.shadow.camera.far = 14;
+    const shadowBounds = 2.6;
+    sunLight.shadow.camera.left = -shadowBounds;
+    sunLight.shadow.camera.right = shadowBounds;
+    sunLight.shadow.camera.top = shadowBounds;
+    sunLight.shadow.camera.bottom = -shadowBounds;
+    sunLight.shadow.bias = -0.0004;
+    scene.add(sunLight);
+    scene.add(sunLight.target);
+
+    const rimLight = new THREE.DirectionalLight(0xa7f3d0, 1.05);
+    rimLight.position.set(-2.2, 2.4, -4.8);
+    scene.add(rimLight);
+
+    // =========================================================================
+    // 2. VIRTUAL FLOOR ANCHOR + PAW AO SHADOWS + PERSPECTIVE GROUND PATCH
+    // =========================================================================
+    let baseScale = 0.64;
+
+    // Character anchor sits on the stage's virtual floor plane (y = 0).
+    const characterAnchor = new THREE.Group();
+    characterAnchor.position.set(0, 0.0, DEFAULT_ANCHOR_Z);
+    characterAnchor.scale.setScalar(baseScale);
+    scene.add(characterAnchor);
+
+    // Inner group for organic breathing, weight shift, and camera look-at
+    const organicMotionGroup = new THREE.Group();
+    characterAnchor.add(organicMotionGroup);
+
+    // Procedural radial soft shadow generator (for paw AO & body penumbra)
+    function createSoftShadowTexture(innerAlpha = 0.95, midAlpha = 0.65) {
+      const sz = 256;
+      const offscreen = document.createElement('canvas');
+      offscreen.width = sz;
+      offscreen.height = sz;
+      const ctx = offscreen.getContext('2d');
+      const half = sz / 2;
+      const grad = ctx.createRadialGradient(half, half, sz * 0.04, half, half, half);
+      grad.addColorStop(0.0, `rgba(4, 14, 8, ${innerAlpha})`);
+      grad.addColorStop(0.45, `rgba(4, 14, 8, ${midAlpha})`);
+      grad.addColorStop(0.78, 'rgba(4, 14, 8, 0.12)');
+      grad.addColorStop(1.0, 'rgba(4, 14, 8, 0.0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, sz, sz);
+      const tex = new THREE.CanvasTexture(offscreen);
+      tex.needsUpdate = true;
+      return tex;
+    }
+
+    // Procedural Pokémon GO AR+ 3D perspective ground grid & mossy terrain ring
+    function createArPerspectiveGroundTexture() {
+      const sz = 512;
+      const offscreen = document.createElement('canvas');
+      offscreen.width = sz;
+      offscreen.height = sz;
+      const ctx = offscreen.getContext('2d');
+      const half = sz / 2;
+
+      // Subtle earthy forest ground radial tint so the floor plane has 3D depth
+      const bgGrad = ctx.createRadialGradient(half, half, sz * 0.05, half, half, half);
+      bgGrad.addColorStop(0.0, 'rgba(14, 99, 47, 0.28)');
+      bgGrad.addColorStop(0.50, 'rgba(14, 99, 47, 0.14)');
+      bgGrad.addColorStop(0.82, 'rgba(239, 236, 225, 0.05)');
+      bgGrad.addColorStop(1.0, 'rgba(0, 0, 0, 0.0)');
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, sz, sz);
+
+      // Concentric perspective distance rings (shows clear horizontal plane depth)
+      ctx.strokeStyle = 'rgba(239, 236, 225, 0.32)';
+      ctx.lineWidth = 2.2;
+      for (const rFrac of [0.26, 0.46, 0.68, 0.88]) {
+        ctx.beginPath();
+        ctx.arc(half, half, half * rFrac, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      // 16 radial perspective compass ticks (gives strong 3D foreshortening cue when tilting)
+      ctx.strokeStyle = 'rgba(167, 243, 208, 0.38)';
+      ctx.lineWidth = 2.0;
+      for (let i = 0; i < 16; i++) {
+        const ang = (i * Math.PI) / 8;
+        const r0 = half * 0.26;
+        const r1 = half * 0.90;
+        ctx.beginPath();
+        ctx.moveTo(half + Math.cos(ang) * r0, half + Math.sin(ang) * r0);
+        ctx.lineTo(half + Math.cos(ang) * r1, half + Math.sin(ang) * r1);
+        ctx.stroke();
+      }
+
+      const tex = new THREE.CanvasTexture(offscreen);
+      tex.needsUpdate = true;
+      return tex;
+    }
+
+    // Layer A: Wide directional cast-shadow catcher on floor (y = 0)
+    const shadowPlane = new THREE.Mesh(
+      new THREE.PlaneGeometry(6.5, 6.5),
+      new THREE.ShadowMaterial({ opacity: 0.48 })
+    );
+    shadowPlane.rotation.x = -Math.PI / 2;
+    shadowPlane.position.y = 0.0005;
+    shadowPlane.receiveShadow = true;
+    characterAnchor.add(shadowPlane);
+
+    // Layer B: 3D Perspective AR Ground Patch (shows foreshortening when tilting/panning)
+    const reticleGroup = new THREE.Group();
+    const perspectiveGroundDisc = new THREE.Mesh(
+      new THREE.PlaneGeometry(2.1, 2.1),
+      new THREE.MeshBasicMaterial({
+        map: createArPerspectiveGroundTexture(),
+        transparent: true,
+        depthWrite: false,
+        opacity: 0.88,
+      })
+    );
+    perspectiveGroundDisc.rotation.x = -Math.PI / 2;
+    perspectiveGroundDisc.position.y = 0.001;
+    reticleGroup.add(perspectiveGroundDisc);
+
+    // Layer C: Soft central body Ambient Occlusion penumbra on the ground
+    const bodyAoTex = createSoftShadowTexture(0.78, 0.42);
+    const bodyContactShadow = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.32, 1.08),
+      new THREE.MeshBasicMaterial({
+        map: bodyAoTex,
+        transparent: true,
+        depthWrite: false,
+        opacity: 0.82,
+      })
+    );
+    bodyContactShadow.rotation.x = -Math.PI / 2;
+    bodyContactShadow.position.set(0, 0.0018, 0.02);
+    characterAnchor.add(bodyContactShadow);
+
+    // Layer D: Dual Paw Contact AO Shadows (deep high-contrast AO welds feet to real floor)
+    const pawAoTex = createSoftShadowTexture(0.95, 0.65);
+    const pawGeo = new THREE.PlaneGeometry(0.38, 0.44);
+    const pawShadowL = new THREE.Mesh(
+      pawGeo,
+      new THREE.MeshBasicMaterial({
+        map: pawAoTex,
+        transparent: true,
+        depthWrite: false,
+        opacity: 0.92,
+      })
+    );
+    pawShadowL.rotation.x = -Math.PI / 2;
+    pawShadowL.position.set(-0.165, 0.0025, 0.04);
+    characterAnchor.add(pawShadowL);
+
+    const pawShadowR = new THREE.Mesh(
+      pawGeo,
+      new THREE.MeshBasicMaterial({
+        map: pawAoTex,
+        transparent: true,
+        depthWrite: false,
+        opacity: 0.92,
+      })
+    );
+    pawShadowR.rotation.x = -Math.PI / 2;
+    pawShadowR.position.set(0.165, 0.0025, 0.04);
+    characterAnchor.add(pawShadowR);
+
+    // Layer E: Subtle Pokémon GO organic ground ripple ring
+    const outerRing = new THREE.Mesh(
+      new THREE.RingGeometry(0.50, 0.54, 64),
+      new THREE.MeshBasicMaterial({
+        color: 0xefece1,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.36,
+        depthWrite: false,
+      })
+    );
+    outerRing.rotation.x = -Math.PI / 2;
+    outerRing.position.y = 0.003;
+    reticleGroup.add(outerRing);
+
+    const pulseRing = new THREE.Mesh(
+      new THREE.RingGeometry(0.30, 0.33, 64),
+      new THREE.MeshBasicMaterial({
+        color: 0xa7f3d0,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.0,
+        depthWrite: false,
+      })
+    );
+    pulseRing.rotation.x = -Math.PI / 2;
+    pulseRing.position.y = 0.0035;
+    reticleGroup.add(pulseRing);
+    characterAnchor.add(reticleGroup);
+
+    // Layer F: Multi-Depth 3D Floating Forest Spores around Ukumari
+    // Positioned across 3 distinct depth planes:
+    // 10 foreground (z = -1.4m to -2.0m),
+    // 10 midground around Ukumari (z = -2.1m to -2.5m),
+    // 10 background (z = -2.6m to -3.8m).
+    // IMU orientation changes the view; translation and real-world parallax are not tracked.
+    const SPORE_COUNT = 30;
+    const sporePositions = new Float32Array(SPORE_COUNT * 3);
+    const sporeSeeds = new Float32Array(SPORE_COUNT);
+    for (let i = 0; i < SPORE_COUNT; i++) {
+      sporeSeeds[i] = Math.random() * Math.PI * 2;
+      sporePositions[i * 3 + 0] = (Math.random() - 0.5) * 1.85;
+      sporePositions[i * 3 + 1] = 0.10 + Math.random() * 1.05;
+
+      let zDist = DEFAULT_ANCHOR_Z;
+      if (i < 10) {
+        // Foreground particles float in front of Ukumari (-1.4m to -2.0m)
+        zDist = -1.4 - Math.random() * 0.6;
+      } else if (i < 20) {
+        // Midground particles float around Ukumari (-2.1m to -2.5m)
+        zDist = -2.1 - Math.random() * 0.4;
+      } else {
+        // Background particles float behind Ukumari (-2.6m to -3.8m)
+        zDist = -2.6 - Math.random() * 1.2;
+      }
+      sporePositions[i * 3 + 2] = zDist;
+    }
+    const sporeGeo = new THREE.BufferGeometry();
+    sporeGeo.setAttribute('position', new THREE.BufferAttribute(sporePositions, 3));
+    const sporeMat = new THREE.PointsMaterial({
+      color: 0xd9f99d,
+      size: 0.038,
+      transparent: true,
+      opacity: 0.65,
+      depthWrite: false,
+    });
+    const forestSpores = new THREE.Points(sporeGeo, sporeMat);
+    scene.add(forestSpores);
+
+    let anchorRippleTimer = 0.0;
+
+    // =========================================================================
+    // 3. STUDIO NEURAL AUDIO + REAL-TIME WEBAUDIO WAVEFORM LIP-SYNC ENGINE
+    // =========================================================================
+    const neuralAudioBase64Map = new Map();
+    const decodedAudioBuffers = new Map();
+    let audioCtx = null;
+    let analyserNode = null;
+    let activeAudioSource = null;
+    let activeAudioElement = null;
+    let activeTrackKey = null;
+    let isPlayingNeuralAudio = false;
+    let neuralPlaybackStartTime = 0;
+    let activeDecodedBuffer = null;
+    const freqBins = new Uint8Array(256);
+    const timeDomainBins = new Uint8Array(256);
+
+    function ensureAudioContext() {
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          audioCtx = new AudioContextClass();
+          analyserNode = audioCtx.createAnalyser();
+          analyserNode.fftSize = 512;
+          analyserNode.smoothingTimeConstant = 0.42;
+          analyserNode.connect(audioCtx.destination);
+        }
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume().catch(() => {});
+      }
+      return audioCtx;
+    }
+
+    window.addEventListener('pointerdown', () => ensureAudioContext(), { passive: true });
+    window.addEventListener('touchstart', () => ensureAudioContext(), { passive: true });
+
+    function base64ToArrayBuffer(b64) {
+      const binaryStr = window.atob(b64);
+      const len = binaryStr.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        bytes[i] = binaryStr.charCodeAt(i);
+      }
+      return bytes.buffer;
+    }
+
+    async function decodeTrackIfNeeded(trackKey) {
+      if (decodedAudioBuffers.has(trackKey)) {
+        return decodedAudioBuffers.get(trackKey);
+      }
+      const b64 = neuralAudioBase64Map.get(trackKey);
+      if (!b64) return null;
+      const ctx = ensureAudioContext();
+      if (!ctx) return null;
+      try {
+        const arrayBuf = base64ToArrayBuffer(b64);
+        const decoded = await ctx.decodeAudioData(arrayBuf.slice(0));
+        decodedAudioBuffers.set(trackKey, decoded);
+        return decoded;
+      } catch (e) {
+        console.warn('decodeAudioData fallback:', e);
+        return null;
+      }
+    }
+
+    function stopNeuralAudioInternal(notify = false) {
+      if (activeAudioSource) {
+        try {
+          activeAudioSource.onended = null;
+          activeAudioSource.stop();
+          activeAudioSource.disconnect();
+        } catch (_) {}
+        activeAudioSource = null;
+      }
+      if (activeAudioElement) {
+        try {
+          activeAudioElement.onended = null;
+          activeAudioElement.pause();
+          activeAudioElement.currentTime = 0;
+        } catch (_) {}
+        activeAudioElement = null;
+      }
+      const finishedKey = activeTrackKey;
+      isPlayingNeuralAudio = false;
+      activeDecodedBuffer = null;
+      activeTrackKey = null;
+      lipSyncTarget = 0.0;
+      if (notify && finishedKey) {
+        notifyFlutter({ event: 'neural_audio_completed', trackKey: finishedKey });
+      }
+    }
+
+    async function playNeuralAudioTrack(trackKey) {
+      stopNeuralAudioInternal(false);
+      if (!neuralAudioBase64Map.has(trackKey)) {
+        notifyFlutter({ event: 'neural_audio_unavailable', trackKey });
+        return false;
+      }
+
+      const ctx = ensureAudioContext();
+      const audioBuffer = await decodeTrackIfNeeded(trackKey);
+
+      if (ctx && audioBuffer) {
+        try {
+          await ctx.resume();
+        } catch (_) {}
+
+        const source = ctx.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(analyserNode);
+
+        activeAudioSource = source;
+        activeDecodedBuffer = audioBuffer;
+        activeTrackKey = trackKey;
+        isPlayingNeuralAudio = true;
+        neuralPlaybackStartTime = ctx.currentTime;
+
+        notifyFlutter({ event: 'neural_audio_started', trackKey });
+
+        source.onended = () => {
+          if (activeAudioSource === source) {
+            stopNeuralAudioInternal(true);
+          }
+        };
+        source.start(0);
+        return true;
+      }
+
+      try {
+        const b64 = neuralAudioBase64Map.get(trackKey);
+        const audio = new Audio('data:audio/mp3;base64,' + b64);
+        activeAudioElement = audio;
+        activeTrackKey = trackKey;
+        isPlayingNeuralAudio = true;
+        audio.onended = () => {
+          if (activeAudioElement === audio) {
+            stopNeuralAudioInternal(true);
+          }
+        };
+        audio.onerror = () => {
+          if (activeAudioElement === audio) {
+            stopNeuralAudioInternal(true);
+          }
+        };
+        await audio.play();
+        notifyFlutter({ event: 'neural_audio_started', trackKey });
+        return true;
+      } catch (err) {
+        console.warn('HTML5 Audio fallback error:', err);
+        stopNeuralAudioInternal(true);
+        return false;
+      }
+    }
+
+    function sampleRealWaveformLipSync() {
+      if (!isPlayingNeuralAudio) return 0.0;
+
+      let formantEnergy = 0.0;
+      let rmsEnergy = 0.0;
+
+      if (analyserNode && audioCtx && audioCtx.state === 'running') {
+        analyserNode.getByteFrequencyData(freqBins);
+        analyserNode.getByteTimeDomainData(timeDomainBins);
+
+        let sumFormants = 0;
+        const startBin = 2;
+        const endBin = 30;
+        for (let i = startBin; i <= endBin; i++) {
+          sumFormants += freqBins[i] / 255.0;
+        }
+        formantEnergy = sumFormants / (endBin - startBin + 1);
+
+        let sumSq = 0;
+        for (let i = 0; i < timeDomainBins.length; i++) {
+          const sample = (timeDomainBins[i] - 128.0) / 128.0;
+          sumSq += sample * sample;
+        }
+        rmsEnergy = Math.sqrt(sumSq / timeDomainBins.length);
+      }
+
+      let pcmRms = 0.0;
+      if (activeDecodedBuffer && audioCtx) {
+        const playbackElapsed = audioCtx.currentTime - neuralPlaybackStartTime;
+        const channelData = activeDecodedBuffer.getChannelData(0);
+        const sr = activeDecodedBuffer.sampleRate;
+        const centerIdx = Math.floor(playbackElapsed * sr);
+        const windowSamples = Math.floor(sr * 0.028);
+        if (centerIdx >= 0 && centerIdx < channelData.length) {
+          const endIdx = Math.min(channelData.length, centerIdx + windowSamples);
+          let sq = 0;
+          let count = 0;
+          for (let i = centerIdx; i < endIdx; i += 2) {
+            const s = channelData[i];
+            sq += s * s;
+            count++;
+          }
+          if (count > 0) {
+            pcmRms = Math.sqrt(sq / count);
+          }
+        }
+      }
+
+      const combinedRms = Math.max(rmsEnergy, pcmRms);
+      if (combinedRms < 0.015 && formantEnergy < 0.04) {
+        return 0.0;
+      }
+
+      const normalized = Math.min(
+        0.96,
+        Math.pow(combinedRms * 3.8, 0.78) * 0.68 + formantEnergy * 0.58
+      );
+      return Math.max(0.0, normalized);
+    }
+
+    // =========================================================================
+    // 4. GLTF MODEL, ORGANIC ANIMATION BLENDING & PROCEDURAL LIFE
+    // =========================================================================
+    const gltfLoader = new GLTFLoader();
+    let mixer = null;
+    const actionsByName = new Map();
+    let currentAction = null;
+    let currentClipName = '02_Saludo';
+    let ukumariMesh = null;
+    let bocaAbiertaIndex = -1;
+    let parpadeoIndex = -1;
+
+    let lipSyncTarget = 0.0;
+    let lipSyncCurrent = 0.0;
+
+    let base64Chunks = [];
+
+    function notifyFlutter(payload) {
+      if (window.UkumariBridge && typeof window.UkumariBridge.postMessage === 'function') {
+        window.UkumariBridge.postMessage(JSON.stringify(payload));
+      }
+    }
+
+    function setupLoadedGltf(gltf) {
+      const model = gltf.scene;
+      model.traverse((node) => {
+        if (node.isMesh) {
+          node.castShadow = true;
+          node.receiveShadow = true;
+          if (node.morphTargetDictionary && node.morphTargetInfluences) {
+            ukumariMesh = node;
+            if ('Boca_abierta' in node.morphTargetDictionary) {
+              bocaAbiertaIndex = node.morphTargetDictionary['Boca_abierta'];
+            }
+            if ('Parpadeo' in node.morphTargetDictionary) {
+              parpadeoIndex = node.morphTargetDictionary['Parpadeo'];
+            }
+          }
+        }
+      });
+
+      const box = new THREE.Box3().setFromObject(model);
+      const center = box.getCenter(new THREE.Vector3());
+      model.position.x = -center.x;
+      model.position.z = -center.z;
+      model.position.y = -box.min.y; // Paws sit strictly on y = 0.0!
+
+      organicMotionGroup.add(model);
+
+      mixer = new THREE.AnimationMixer(model);
+      mixer.addEventListener('finished', (event) => {
+        if (event.action === currentAction && currentClipName !== '01_Reposo') {
+          playAnimation('01_Reposo', true);
+        }
+      });
+      actionsByName.clear();
+
+      for (const clip of gltf.animations) {
+        const action = mixer.clipAction(clip);
+        action.setLoop(THREE.LoopRepeat, Infinity);
+        action.clampWhenFinished = false;
+        actionsByName.set(clip.name, action);
+      }
+
+      // Play the welcome wave once, then let the guide settle into its idle pose.
+      playAnimation('02_Saludo', false);
+      loadingPill.classList.add('hidden');
+
+      arHintToast.classList.add('visible');
+      setTimeout(() => arHintToast.classList.remove('visible'), 5500);
+
+      notifyFlutter({
+        event: 'model_ready',
+        clips: Array.from(actionsByName.keys()),
+      });
+    }
+
+    function playAnimation(clipName, loop = true) {
+      if (!mixer || actionsByName.size === 0) return;
+      if (isWalking && clipName !== '08_Caminar') return;
+      const targetAction =
+        actionsByName.get(clipName) ||
+        actionsByName.get('02_Saludo') ||
+        actionsByName.get('01_Reposo');
+      if (!targetAction) return;
+
+      targetAction.setLoop(loop ? THREE.LoopRepeat : THREE.LoopOnce, loop ? Infinity : 1);
+      targetAction.clampWhenFinished = !loop;
+      targetAction.setEffectiveTimeScale(0.95 + Math.sin(performance.now() * 0.001) * 0.04);
+
+      const fadeDuration = (clipName === '08_Caminar' || currentClipName === '08_Caminar') ? 0.38 : 0.85;
+      if (currentAction !== targetAction) {
+        targetAction.enabled = true;
+        targetAction.setEffectiveWeight(1.0);
+        if (!targetAction.isRunning()) {
+          targetAction.play();
+        }
+        if (currentAction) {
+          currentAction.crossFadeTo(targetAction, fadeDuration, false);
+        }
+        currentAction = targetAction;
+        currentClipName = clipName;
+      } else if (!targetAction.isRunning()) {
+        targetAction.enabled = true;
+        targetAction.reset();
+        targetAction.play();
+      }
+    }
+
+    // =========================================================================
+    // 5. IMU-ASSISTED CAMERA ORIENTATION AND CHARACTER LOCOMOTION
+    // =========================================================================
+    let usingNativeSensors = false;
+    let hasSensorReference = false;
+    let refPitch = 0;
+    let refYaw = 0;
+    let refRoll = 0;
+
+    let targetCamPitchOffset = 0;
+    let targetCamYawOffset = 0;
+    let targetCamRollOffset = 0;
+    let smoothCamPitchOffset = 0;
+    let smoothCamYawOffset = 0;
+    let smoothCamRollOffset = 0;
+
+
+    // Locomotion & Walking state
+    let isWalking = false;
+    let walkProgress = 1.0;
+    let walkDuration = 1.0;
+    const walkStartPos = new THREE.Vector3(0, 0, DEFAULT_ANCHOR_Z);
+    const walkTargetPos = new THREE.Vector3(0, 0, DEFAULT_ANCHOR_Z);
+    let walkHeadingYaw = 0.0;
+    let userManualYawOffset = 0.0;
+
+    function shortestAngleDelta(target, reference) {
+      let diff = target - reference;
+      while (diff > Math.PI) diff -= Math.PI * 2;
+      while (diff < -Math.PI) diff += Math.PI * 2;
+      return diff;
+    }
+
+    function handleDevicePose(pitchRad, yawRad, rollRad, ax = 0, ay = 0, az = 0) {
+      if (!hasSensorReference) {
+        refPitch = pitchRad;
+        refYaw = yawRad;
+        refRoll = rollRad;
+        hasSensorReference = true;
+      }
+      // IMU-assisted virtual camera orientation. This stage has no ARCore/ARKit
+      // plane tracking, so keep its virtual camera origin fixed to avoid fake drift.
+      const dPitch = shortestAngleDelta(pitchRad, refPitch);
+      const dYaw = shortestAngleDelta(yawRad, refYaw);
+      const dRoll = shortestAngleDelta(rollRad, refRoll);
+
+      targetCamPitchOffset = THREE.MathUtils.clamp(dPitch, -0.75, 0.75);
+      targetCamYawOffset = -dYaw;
+      targetCamRollOffset = THREE.MathUtils.clamp(-dRoll * 0.45, -0.25, 0.25);
+      // Acceleration values are ignored: this stage has no visual-inertial
+      // tracking and cannot infer reliable real-world translation from them.
+    }
+
+    // Browser HTML5 DeviceOrientation fallback when running in standalone Chrome
+    window.addEventListener('deviceorientation', (event) => {
+      if (usingNativeSensors) return;
+      if (event.alpha === null || event.beta === null || event.gamma === null) return;
+      const pitchRad = THREE.MathUtils.degToRad((event.beta || 75) - 75);
+      const yawRad = THREE.MathUtils.degToRad(event.alpha || 0);
+      const rollRad = THREE.MathUtils.degToRad(event.gamma || 0);
+      handleDevicePose(pitchRad, yawRad, rollRad, 0, 0, 0);
+    });
+
+    // Chooses a closer destination so "¡Ven aquí!" creates a clearly visible approach.
+    function getFloorPointInFrontOfCamera() {
+      const fwd = new THREE.Vector3();
+      camera.getWorldDirection(fwd);
+      const horizLen = Math.hypot(fwd.x, fwd.z);
+      const hx = horizLen > 0.001 ? fwd.x / horizLen : 0;
+      const hz = horizLen > 0.001 ? fwd.z / horizLen : -1;
+      return new THREE.Vector3(
+        camera.position.x + hx * 1.45,
+        0.0,
+        camera.position.z + hz * 1.45
+      );
+    }
+
+    // Starts Ukumari walking across the 3D floor to (targetX, 0, targetZ)
+    function startWalkingTo(targetX, targetZ) {
+      userManualYawOffset = 0.0;
+      const currentPos = characterAnchor.position;
+      let dist = Math.hypot(targetX - currentPos.x, targetZ - currentPos.z);
+      if (dist < 0.25) {
+        // If the floor tap lands on Ukumari, take a deliberate step toward the user.
+        const awayX = currentPos.x - camera.position.x;
+        const awayZ = currentPos.z - camera.position.z;
+        const awayLength = Math.hypot(awayX, awayZ) || 1.0;
+        targetX = currentPos.x - (awayX / awayLength) * 0.8;
+        targetZ = currentPos.z - (awayZ / awayLength) * 0.8;
+        dist = Math.hypot(targetX - currentPos.x, targetZ - currentPos.z);
+      }
+
+      walkStartPos.copy(currentPos);
+      walkTargetPos.set(targetX, 0.0, targetZ);
+      const dx = targetX - walkStartPos.x;
+      const dz = targetZ - walkStartPos.z;
+      walkHeadingYaw = Math.atan2(dx, dz);
+
+      // The exported Mixamo walk cycle is 1.07s. Match travel speed to that stride
+      // so the paws do not cycle in place while the body glides across the floor.
+      const walkCycleSeconds = 1.07;
+      walkDuration = Math.max(walkCycleSeconds, Math.min(4.5, dist / 0.62));
+      walkProgress = 0.0;
+      isWalking = true;
+
+      // Active skeletal walking gait
+      playAnimation('08_Caminar', true);
+      if (currentAction) {
+        currentAction.setEffectiveTimeScale(1.0);
+      }
+      anchorRippleTimer = 0.0;
+    }
+
+    function reanchorToCurrentView() {
+      userManualYawOffset = 0.0;
+      const targetPoint = getFloorPointInFrontOfCamera();
+      const currentPos = characterAnchor.position;
+      const dist = Math.hypot(targetPoint.x - currentPos.x, targetPoint.z - currentPos.z);
+      if (dist < 0.25) {
+        const lateralOffset = (Math.random() > 0.5 ? 0.35 : -0.35);
+        targetPoint.x += lateralOffset;
+      }
+      startWalkingTo(targetPoint.x, targetPoint.z);
+    }
+
+    const raycaster = new THREE.Raycaster();
+    const groundMathPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+    const activePointers = new Map();
+    let pointerDownPos = { x: 0, y: 0, time: 0 };
+    let previousDragX = 0;
+    let initialPinchDistance = 0;
+    let initialPinchScale = baseScale;
+
+    canvas.addEventListener('pointerdown', (e) => {
+      activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (activePointers.size === 1) {
+        previousDragX = e.clientX;
+        pointerDownPos = { x: e.clientX, y: e.clientY, time: performance.now() };
+      } else if (activePointers.size === 2) {
+        const pts = Array.from(activePointers.values());
+        initialPinchDistance = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+        initialPinchScale = baseScale;
+      }
+    });
+
+    canvas.addEventListener('pointermove', (e) => {
+      if (!activePointers.has(e.pointerId)) return;
+      activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+      if (activePointers.size === 1) {
+        const deltaX = e.clientX - previousDragX;
+        previousDragX = e.clientX;
+        userManualYawOffset += deltaX * 0.0085;
+      } else if (activePointers.size === 2 && initialPinchDistance > 10) {
+        const pts = Array.from(activePointers.values());
+        const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+        const ratio = dist / initialPinchDistance;
+        setScale(Math.min(0.95, Math.max(0.42, initialPinchScale * ratio)));
+      }
+    });
+
+    function handleScreenTap(clientX, clientY, screenWidth, screenHeight) {
+      const w = Number(screenWidth) || window.innerWidth;
+      const h = Number(screenHeight) || window.innerHeight;
+      const ndc = new THREE.Vector2(
+        (clientX / w) * 2 - 1,
+        -(clientY / h) * 2 + 1
+      );
+      raycaster.setFromCamera(ndc, camera);
+      const hitPoint = new THREE.Vector3();
+      let targetX = 0;
+      let targetZ = 0;
+      let validTarget = false;
+
+      if (raycaster.ray.intersectPlane(groundMathPlane, hitPoint)) {
+        const camDir = new THREE.Vector3();
+        camera.getWorldDirection(camDir);
+        const toHit = new THREE.Vector3().subVectors(hitPoint, camera.position);
+        if (camDir.dot(toHit) > 0) {
+          const distFromCam = Math.hypot(
+            hitPoint.x - camera.position.x,
+            hitPoint.z - camera.position.z
+          );
+          if (distFromCam >= 0.8 && distFromCam <= 5.5) {
+            targetX = hitPoint.x;
+            targetZ = hitPoint.z;
+            validTarget = true;
+          } else if (distFromCam > 5.5) {
+            const dirX = (hitPoint.x - camera.position.x) / distFromCam;
+            const dirZ = (hitPoint.z - camera.position.z) / distFromCam;
+            targetX = camera.position.x + dirX * 2.5;
+            targetZ = camera.position.z + dirZ * 2.5;
+            validTarget = true;
+          }
+        }
+      }
+
+      if (!validTarget) {
+        const rayDir = raycaster.ray.direction;
+        const horizLen = Math.hypot(rayDir.x, rayDir.z);
+        if (horizLen > 0.001) {
+          targetX = camera.position.x + (rayDir.x / horizLen) * 2.25;
+          targetZ = camera.position.z + (rayDir.z / horizLen) * 2.25;
+          validTarget = true;
+        }
+      }
+
+      if (validTarget) {
+        startWalkingTo(targetX, targetZ);
+      }
+    }
+
+    function removePointer(e) {
+      if (activePointers.size === 1 && e.type === 'pointerup') {
+        const moveDist = Math.hypot(
+          e.clientX - pointerDownPos.x,
+          e.clientY - pointerDownPos.y
+        );
+        const dtMs = performance.now() - pointerDownPos.time;
+        if (moveDist < 25 && dtMs < 500) {
+          handleScreenTap(e.clientX, e.clientY, window.innerWidth, window.innerHeight);
+        }
+      }
+      activePointers.delete(e.pointerId);
+    }
+    canvas.addEventListener('pointerup', removePointer);
+    canvas.addEventListener('pointercancel', removePointer);
+
+    function setScale(scaleValue) {
+      baseScale = Math.max(0.42, Math.min(0.95, Number(scaleValue) || 0.64));
+      characterAnchor.scale.setScalar(baseScale);
+    }
+
+    function resetPlacement() {
+      reanchorToCurrentView();
+      setScale(0.64);
+    }
+
+    window.ukumariStage = {
+      beginGlbTransfer() {
+        base64Chunks = [];
+        loadingPill.classList.remove('hidden');
+      },
+      appendGlbChunk(chunk) {
+        base64Chunks.push(chunk);
+      },
+      finishGlbTransfer() {
+        const fullBase64 = base64Chunks.join('');
+        base64Chunks = [];
+        const bytesBuffer = base64ToArrayBuffer(fullBase64);
+        gltfLoader.parse(
+          bytesBuffer,
+          '',
+          (gltf) => setupLoadedGltf(gltf),
+          (err) => console.error('Error parsing GLB buffer:', err)
+        );
+      },
+      loadGlbFromUrl(url) {
+        gltfLoader.load(
+          url,
+          (gltf) => setupLoadedGltf(gltf),
+          undefined,
+          (err) => console.error('Error loading GLB URL:', err)
+        );
+      },
+      registerNeuralAudio(trackKey, base64Mp3) {
+        if (trackKey && base64Mp3) {
+          neuralAudioBase64Map.set(trackKey, base64Mp3);
+          decodeTrackIfNeeded(trackKey);
+        }
+      },
+      playNeuralAudio(trackKey) {
+        playNeuralAudioTrack(trackKey);
+      },
+      stopNeuralAudio() {
+        stopNeuralAudioInternal(false);
+      },
+      updateDevicePose(pitch, yaw, roll, ax, ay, az) {
+        usingNativeSensors = true;
+        handleDevicePose(
+          Number(pitch) || 0,
+          Number(yaw) || 0,
+          Number(roll) || 0,
+          Number(ax) || 0,
+          Number(ay) || 0,
+          Number(az) || 0
+        );
+      },
+      handleScreenTap(clientX, clientY, screenWidth, screenHeight) {
+        handleScreenTap(clientX, clientY, screenWidth, screenHeight);
+      },
+      reanchorToCurrentView() {
+        reanchorToCurrentView();
+      },
+      playAnimation(clipName, loop = true) {
+        playAnimation(clipName, loop);
+      },
+      setLipSync(amplitude) {
+        if (!isPlayingNeuralAudio) {
+          lipSyncTarget = Math.max(0.0, Math.min(1.0, Number(amplitude) || 0.0));
+        }
+      },
+      setScale(scaleValue) {
+        setScale(scaleValue);
+      },
+      resetPlacement() {
+        resetPlacement();
+      },
+      setReticleVisible(visible) {
+        reticleGroup.visible = Boolean(visible);
+      },
+    };
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight, false);
+    });
+
+    // =========================================================================
+    // 6. 60 FPS RENDER, SETTLE-DETECTION & PROCEDURAL WALKING ENGINE
+    // =========================================================================
+    const clock = new THREE.Clock();
+    function animate() {
+      requestAnimationFrame(animate);
+      const dt = Math.min(clock.getDelta(), 0.1);
+      const elapsed = clock.getElapsedTime();
+      const nowMs = performance.now();
+      // A. Update camera orientation from the IMU while keeping its virtual
+      // origin fixed. Physical world tracking requires an ARCore/ARKit session.
+      const camSmooth = Math.min(1.0, dt * 11.0);
+      smoothCamYawOffset += (targetCamYawOffset - smoothCamYawOffset) * camSmooth;
+      smoothCamPitchOffset += (targetCamPitchOffset - smoothCamPitchOffset) * camSmooth;
+      smoothCamRollOffset += (targetCamRollOffset - smoothCamRollOffset) * camSmooth;
+
+      // Lock vertical camera height & pitch:
+      // Raising or tilting the phone does NOT shift Ukumari vertically on screen.
+      // A subtle micro-tilt (max ±0.015 rad / ±0.85°) provides a natural horizon sensation without moving Ukumari.
+      const subtlePitch = THREE.MathUtils.clamp(smoothCamPitchOffset * 0.15, -0.015, 0.015);
+
+      camera.position.set(0, CAMERA_HEIGHT, 0);
+      camera.rotation.set(
+        DEFAULT_LOOK_PITCH + subtlePitch,
+        smoothCamYawOffset,
+        smoothCamRollOffset
+      );
+      // B. Locomotion is triggered by explicit user intent: screen tap or button.
+      // The virtual camera origin remains fixed unless the user moves Ukumari.
+      // C. Walking Locomotion Engine
+      if (isWalking) {
+        walkProgress = Math.min(1.0, walkProgress + dt / walkDuration);
+        // Keep stride speed nearly constant; soften only the first and last 14%.
+        const easeWindow = 0.14;
+        const eased = walkProgress < easeWindow
+          ? easeWindow * THREE.MathUtils.smoothstep(walkProgress / easeWindow, 0, 1)
+          : walkProgress > 1.0 - easeWindow
+            ? 1.0 - easeWindow * THREE.MathUtils.smoothstep(
+                (1.0 - walkProgress) / easeWindow,
+                0,
+                1
+              )
+            : walkProgress;
+        characterAnchor.position.lerpVectors(walkStartPos, walkTargetPos, eased);
+
+        // Turn body smoothly toward walkHeadingYaw
+        characterAnchor.rotation.y +=
+          shortestAngleDelta(walkHeadingYaw, characterAnchor.rotation.y) *
+          Math.min(1.0, dt * 7.5);
+
+        // Natural authentic skeletal walk: paws remain grounded on the floor
+        organicMotionGroup.position.set(0, 0, 0);
+        organicMotionGroup.rotation.set(0, 0, 0);
+        organicMotionGroup.scale.set(1.0, 1.0, 1.0);
+
+        // Keep contact shadows in phase with the exported 1.07s Mixamo gait.
+        const walkCycleTime = (walkProgress * walkDuration) / 1.07;
+        const pawPhase = walkCycleTime * Math.PI * 2.0;
+        const pawCycle = Math.sin(pawPhase);
+        const leftLift = Math.max(0.0, pawCycle);
+        const rightLift = Math.max(0.0, -pawCycle);
+
+        pawShadowL.material.opacity = 0.92 - leftLift * 0.45;
+        pawShadowL.scale.setScalar(1.0 - leftLift * 0.18);
+        pawShadowR.material.opacity = 0.92 - rightLift * 0.45;
+        pawShadowR.scale.setScalar(1.0 - rightLift * 0.18);
+        bodyContactShadow.material.opacity = 0.78;
+
+        // Arrival upon reaching destination
+        if (walkProgress >= 1.0) {
+          isWalking = false;
+          characterAnchor.position.copy(walkTargetPos);
+          if (currentAction) {
+            currentAction.setEffectiveTimeScale(1.0);
+          }
+
+          // Smoothly face the camera upon arrival
+          const dxCam = camera.position.x - characterAnchor.position.x;
+          const dzCam = camera.position.z - characterAnchor.position.z;
+          characterAnchor.rotation.y = Math.atan2(dxCam, dzCam);
+
+          // Warmly wave greeting upon arrival!
+          playAnimation('02_Saludo', false);
+
+          anchorRippleTimer = 0.0;
+        }
+      } else {
+        // Idle State: Ukumari faces the camera, breathes, and sways gently
+        const dxCam = camera.position.x - characterAnchor.position.x;
+        const dzCam = camera.position.z - characterAnchor.position.z;
+        const targetFaceYaw = Math.atan2(dxCam, dzCam) + userManualYawOffset + Math.sin(elapsed * 0.55) * 0.03;
+        characterAnchor.rotation.y +=
+          shortestAngleDelta(targetFaceYaw, characterAnchor.rotation.y) *
+          Math.min(1.0, dt * 4.5);
+
+        const breathWave =
+          Math.sin(elapsed * 2.05) * 0.012 + Math.sin(elapsed * 1.02) * 0.005;
+        const swayX = Math.sin(elapsed * 0.88) * 0.015;
+        const swayRoll = Math.sin(elapsed * 0.88 + 0.4) * 0.016;
+        const talkMicroNod =
+          (isPlayingNeuralAudio || lipSyncCurrent > 0.05)
+            ? Math.sin(elapsed * 5.6) * 0.018 * Math.min(1.0, lipSyncCurrent * 1.6)
+            : 0.0;
+
+        organicMotionGroup.position.set(swayX, 0, 0);
+        organicMotionGroup.rotation.set(talkMicroNod, 0, swayRoll);
+        organicMotionGroup.scale.set(
+          1.0 - breathWave * 0.42,
+          1.0 + breathWave,
+          1.0 - breathWave * 0.42
+        );
+
+        pawShadowL.material.opacity = 0.92 - swayX * 3.5;
+        pawShadowL.scale.setScalar(1.0);
+        pawShadowR.material.opacity = 0.92 + swayX * 3.5;
+        pawShadowR.scale.setScalar(1.0);
+        bodyContactShadow.material.opacity = 0.76;
+      }
+
+      // Floating 3D forest spores follow Ukumari's world coordinates
+      forestSpores.position.x = characterAnchor.position.x;
+      forestSpores.position.z = characterAnchor.position.z - DEFAULT_ANCHOR_Z;
+      const posAttr = sporeGeo.getAttribute('position');
+      for (let i = 0; i < SPORE_COUNT; i++) {
+        const seed = sporeSeeds[i];
+        const baseY = 0.10 + ((i * 0.038) % 0.95);
+        posAttr.setY(i, baseY + Math.sin(elapsed * 1.2 + seed) * 0.045);
+      }
+      posAttr.needsUpdate = true;
+
+      // Keep directional sun shadow centered on Ukumari's floor position
+      sunLight.position.set(
+        characterAnchor.position.x + 1.6,
+        4.4,
+        characterAnchor.position.z + 1.65
+      );
+      sunLight.target.position.copy(characterAnchor.position);
+      sunLight.target.updateMatrixWorld();
+
+      // D. Skeletal animation playback, driven by the guide session controller
+      if (mixer) {
+        mixer.update(dt);
+      }
+
+      // E. Real-Time Neural Waveform Lip-Sync on `Boca_abierta`
+      if (isPlayingNeuralAudio) {
+        lipSyncTarget = sampleRealWaveformLipSync();
+      }
+      const lipRate = lipSyncTarget > lipSyncCurrent ? 32.0 : 18.0;
+      lipSyncCurrent += (lipSyncTarget - lipSyncCurrent) * Math.min(1.0, dt * lipRate);
+
+      if (ukumariMesh && ukumariMesh.morphTargetInfluences) {
+        if (bocaAbiertaIndex >= 0) {
+          const animMouth = ukumariMesh.morphTargetInfluences[bocaAbiertaIndex] || 0;
+          ukumariMesh.morphTargetInfluences[bocaAbiertaIndex] = Math.max(
+            animMouth * 0.25,
+            lipSyncCurrent
+          );
+        }
+        if (parpadeoIndex >= 0) {
+          const animBlink = ukumariMesh.morphTargetInfluences[parpadeoIndex] || 0;
+          const cycle = elapsed % 4.3;
+          const procBlink =
+            cycle > 4.12 ? Math.sin(((cycle - 4.12) / 0.18) * Math.PI) : 0.0;
+          ukumariMesh.morphTargetInfluences[parpadeoIndex] = Math.max(
+            animBlink,
+            procBlink
+          );
+        }
+      }
+
+      // F. Ground Ripple Ring Animation
+      if (anchorRippleTimer < 1.8) {
+        anchorRippleTimer += dt;
+        const t = Math.min(1.0, anchorRippleTimer / 1.4);
+        const scaleRipple = 0.55 + t * 1.25;
+        pulseRing.scale.setScalar(scaleRipple);
+        pulseRing.material.opacity = (1.0 - t) * 0.58;
+        outerRing.material.opacity = 0.28 + (1.0 - t) * 0.28;
+      } else {
+        pulseRing.material.opacity = 0.0;
+        outerRing.material.opacity = 0.24 + Math.sin(elapsed * 2.0) * 0.05;
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    animate();
+  </script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      html, body { width: 1px; height: 1px; margin: 0; overflow: hidden; background: transparent; }
+    </style>
+  </head>
+  <body>
+    <script>
+      const tracks = new Map();
+      let activeAudio = null;
+      let activeKey = null;
+
+      function notify(event, trackKey) {
+        const bridge = window.UkumariBridge;
+        if (bridge && typeof bridge.postMessage === 'function') {
+          bridge.postMessage(JSON.stringify({ event, trackKey }));
+        }
+      }
+
+      function stop(notifyCompletion = false) {
+        const finishedKey = activeKey;
+        if (activeAudio) {
+          activeAudio.onended = null;
+          activeAudio.onerror = null;
+          activeAudio.pause();
+          activeAudio.currentTime = 0;
+        }
+        activeAudio = null;
+        activeKey = null;
+        if (notifyCompletion && finishedKey) notify('neural_audio_completed', finishedKey);
+      }
+
+      window.ukumariStage = {
+        registerNeuralAudio(key, base64) {
+          tracks.set(key, base64);
+        },
+        async playNeuralAudio(key) {
+          stop(false);
+          const base64 = tracks.get(key);
+          if (!base64) {
+            notify('neural_audio_unavailable', key);
+            return;
+          }
+          const audio = new Audio(`data:audio/mpeg;base64,${base64}`);
+          activeAudio = audio;
+          activeKey = key;
+          audio.onended = () => {
+            if (activeAudio === audio) stop(true);
+          };
+          audio.onerror = () => {
+            if (activeAudio === audio) {
+              stop(false);
+              notify('neural_audio_unavailable', key);
+            }
+          };
+          try {
+            await audio.play();
+            notify('neural_audio_started', key);
+          } catch (_) {
+            stop(false);
+            notify('neural_audio_unavailable', key);
+          }
+        },
+        stopNeuralAudio() {
+          stop(false);
+        },
+      };
+    </script>
+  </body>
+</html>
